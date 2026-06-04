@@ -6,9 +6,10 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win portable",
-    "dist:dir": "electron-builder --win dir",
-    "dist:setup": "electron-builder --win nsis"
+    "prepare:icons": "node scripts/write-icon.js",
+    "dist": "node scripts/write-icon.js && electron-builder --win portable",
+    "dist:dir": "node scripts/write-icon.js && electron-builder --win dir",
+    "dist:setup": "node scripts/write-icon.js && electron-builder --win nsis"
   },
   "dependencies": {},
   "devDependencies": {
@@ -21,10 +22,12 @@
     "files": [
       "src/**/*",
       "assets/**/*",
+      "scripts/**/*",
       "package.json"
     ],
     "win": {
       "target": "portable",
+      "icon": "assets/icon.ico",
       "signAndEditExecutable": false
     }
   }
