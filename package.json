@@ -1,0 +1,29 @@
+{
+  "name": "inventory-label-printer-electron",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop inventory label printer for Citizen CLP-7201e and local label counters.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "local.inventory.labelprinter",
+    "productName": "Inventory Label Printer",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    }
+  }
+}
