@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventory Label Printer</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="left">
+        <header class="header">
+          <div>
+            <p class="eyebrow">Local Inventory Labels</p>
+            <h1>Label Printer</h1>
+            <p class="sub">Citizen CLP-7201e workflow with local saved counters.</p>
+          </div>
+          <button id="refreshButton" class="icon-btn" title="Refresh">R</button>
+        </header>
+
+        <section class="panel print-panel">
+          <div>
+            <h2>Print Batch</h2>
+            <p class="muted">Choose a format and quantity. The number range is reserved immediately.</p>
+          </div>
+          <form id="printForm" class="print-form">
+            <div class="selected-summary" id="selectedSummary">Select a format</div>
+            <label>
+              Quantity
+              <input id="quantityInput" type="number" min="1" max="1000" value="10">
+            </label>
+            <button class="primary" type="submit">Generate Labels</button>
+          </form>
+          <div class="type-controls">
+            <label>
+              Font
+              <select id="fontFamilyInput">
+                <option value="Consolas">Consolas</option>
+                <option value="Segoe UI">Segoe UI</option>
+                <option value="Arial">Arial</option>
+                <option value="Calibri">Calibri</option>
+                <option value="Tahoma">Tahoma</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Times New Roman">Times New Roman</option>
+              </select>
+            </label>
+            <label>
+              Font Size
+              <input id="fontSizeInput" type="number" min="8" max="72" value="20">
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <div>
+              <h2>Label Formats</h2>
+              <p class="muted">Manage prefixes such as TH, WS, and NE.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Prefix</th>
+                  <th>Name</th>
+                  <th>Next Label</th>
+                  <th>Digits</th>
+                  <th>Size</th>
+                </tr>
+              </thead>
+              <tbody id="formatRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div>
+            <h2>Edit Or Add Format</h2>
+            <p class="muted">Set the next number to the first label that should print next.</p>
+          </div>
+          <form id="formatForm" class="format-form">
+            <label>Name<input name="name" id="nameInput"></label>
+            <label>Prefix<input name="prefix" id="prefixInput" maxlength="8"></label>
+            <label>Next Number<input name="nextNumber" id="nextNumberInput" type="number" min="1"></label>
+            <label>Digits<input name="digits" id="digitsInput" type="number" min="1" max="12"></label>
+            <label>Width mm<input name="labelWidthMm" id="widthInput" type="number" min="10" max="210"></label>
+            <label>Height mm<input name="labelHeightMm" id="heightInput" type="number" min="8" max="100"></label>
+            <div class="actions">
+              <button id="saveFormatButton" class="primary" type="submit">Save</button>
+              <button id="addButton" type="button">Add</button>
+              <button id="deleteButton" class="danger" type="button">Delete</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="right">
+        <section class="panel preview-panel">
+          <div class="panel-title">
+            <div>
+              <h2>Preview</h2>
+              <p class="muted" id="previewMeta">No batch generated yet.</p>
+            </div>
+            <span class="type-badge" id="typeBadge">Consolas - 20 pt</span>
+            <button id="printButton" class="primary" disabled>Print</button>
+          </div>
+          <div class="label-preview" id="labelPreview"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <div>
+              <h2>Recent Batches</h2>
+              <p class="muted">Reprint previous batches without reserving new numbers.</p>
+            </div>
+            <button id="clearBatchesButton" class="danger" type="button">Clear</button>
+          </div>
+          <div class="batch-list" id="batchList"></div>
+        </section>
+      </section>
+    </main>
+    <div id="toast" class="toast"></div>
+    <script src="renderer.js"></script>
+  </body>
+</html>
