@@ -33,8 +33,15 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
+      "multiLanguageInstaller": true,
+      "displayLanguageSelector": true,
+      "installerLanguages": [
+        "en_US",
+        "de_DE",
+        "fr_FR"
+      ],
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": "always",
+      "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Inventory Label Printer"
     }
