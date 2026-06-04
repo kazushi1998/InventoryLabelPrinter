@@ -200,17 +200,21 @@ function renderAll() {
   renderBatches();
 }
 
-async function loadState() {
-  const data = await window.labelPrinter.getState();
+function applyState(data) {
   state.settings = data.settings || state.settings;
-  state.formats = data.formats;
-  state.batches = data.batches;
+  state.formats = data.formats || [];
+  state.batches = data.batches || [];
   elements.fontFamilyInput.value = state.settings.fontFamily;
   elements.fontSizeInput.value = state.settings.fontSizePt;
   if (!state.formats.some((format) => format.id === state.selectedFormatId)) {
     state.selectedFormatId = state.formats[0]?.id || null;
   }
   renderAll();
+}
+
+async function loadState() {
+  const data = await window.labelPrinter.getState();
+  applyState(data);
 }
 
 function formPayload() {
@@ -237,50 +241,66 @@ elements.formatForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     if (!state.selectedFormatId) {
-      const format = await window.labelPrinter.addFormat(formPayload());
+      const result = await window.labelPrinter.addFormat(formPayload());
+      const format = result.format;
       state.selectedFormatId = format.id;
-      await loadState();
+      applyState(result.state);
       showToast("Format added.");
       return;
     }
-    await window.labelPrinter.saveFormat(formPayload());
-    await loadState();
+    const result = await window.labelPrinter.saveFormat(formPayload());
+    applyState(result.state);
     showToast("Format saved.");
   } catch (error) {
-    showToast(error.message);
+    showToast(error.message || "Could not save format.");
   }
 });
 
 elements.addButton.addEventListener("click", async () => {
   try {
-    const format = await window.labelPrinter.addFormat(formPayload());
+    const result = await window.labelPrinter.addFormat(formPayload());
+    const format = result.format;
     state.selectedFormatId = format.id;
-    await loadState();
+    applyState(result.state);
     showToast("Format added.");
   } catch (error) {
-    showToast(error.message);
+    showToast(error.message || "Could not add format.");
   }
 });
 
 elements.deleteButton.addEventListener("click", async () => {
-  elements.deleteButton.disabled = true;
+  const format = selectedFormat();
+  if (!format) return;
+  const confirmed = confirm(`Delete format ${format.prefix} - ${format.name}?\n\nExisting recent batches stay available for reprint.`);
+  if (!confirmed) return;
+
+  const previousState = {
+    formats: [...state.formats],
+    selectedFormatId: state.selectedFormatId,
+    activeBatch: state.activeBatch,
+    activeLabels: [...state.activeLabels]
+  };
+
+  state.formats = state.formats.filter((item) => item.id !== format.id);
+  state.selectedFormatId = state.formats[0]?.id || null;
+  state.activeBatch = null;
+  state.activeLabels = [];
+  renderAll();
+  elements.prefixInput.focus();
+
   try {
-    const format = selectedFormat();
-    if (!format) return;
-    const confirmed = confirm(`Delete format ${format.prefix} - ${format.name}?\n\nExisting recent batches stay available for reprint.`);
-    if (!confirmed) return;
-    await window.labelPrinter.deleteFormat(format.id);
-    state.selectedFormatId = null;
-    state.activeBatch = null;
-    state.activeLabels = [];
-    await loadState();
+    const data = await window.labelPrinter.deleteFormat(format.id);
+    applyState(data);
     renderPreview();
     elements.prefixInput.focus();
     showToast("Format deleted.");
   } catch (error) {
-    showToast(error.message);
-  } finally {
-    elements.deleteButton.disabled = !selectedFormat();
+    state.formats = previousState.formats;
+    state.selectedFormatId = previousState.selectedFormatId;
+    state.activeBatch = previousState.activeBatch;
+    state.activeLabels = previousState.activeLabels;
+    renderAll();
+    showToast(error.message || "Could not delete format.");
   }
 });
 
@@ -311,14 +331,18 @@ elements.batchList.addEventListener("click", async (event) => {
 });
 
 elements.clearBatchesButton.addEventListener("click", async () => {
-  if (!state.batches.length) return;
-  const confirmed = confirm("Clear all recently printed batches?\n\nThis only clears the recent batch history. It does not roll back next label numbers.");
-  if (!confirmed) return;
-  await window.labelPrinter.clearBatches();
-  state.activeBatch = null;
-  state.activeLabels = [];
-  await loadState();
-  showToast("Recent batches cleared.");
+  try {
+    if (!state.batches.length) return;
+    const confirmed = confirm("Clear all recently printed batches?\n\nThis only clears the recent batch history. It does not roll back next label numbers.");
+    if (!confirmed) return;
+    const data = await window.labelPrinter.clearBatches();
+    state.activeBatch = null;
+    state.activeLabels = [];
+    applyState(data);
+    showToast("Recent batches cleared.");
+  } catch (error) {
+    showToast(error.message || "Could not clear recent batches.");
+  }
 });
 
 elements.printButton.addEventListener("click", async () => {
@@ -339,10 +363,11 @@ function syncSettingsFromInputs() {
 
 async function saveSettingsFromInputs(showSavedToast = true) {
   syncSettingsFromInputs();
-  state.settings = await window.labelPrinter.saveSettings({
+  const data = await window.labelPrinter.saveSettings({
     fontFamily: state.settings.fontFamily,
     fontSizePt: state.settings.fontSizePt
   });
+  applyState(data);
   renderPreview();
   if (showSavedToast) showToast("Font settings saved.");
 }
