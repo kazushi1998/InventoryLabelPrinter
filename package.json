@@ -29,6 +29,14 @@
       "target": "portable",
       "icon": "assets/icon.ico",
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Inventory Label Printer"
     }
   }
 }
