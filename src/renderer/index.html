@@ -122,6 +122,16 @@
       </section>
     </main>
     <div id="toast" class="toast"></div>
+    <div id="confirmOverlay" class="confirm-overlay" hidden>
+      <div class="confirm-box">
+        <h3 id="confirmTitle">Confirm</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-actions">
+          <button id="confirmCancelButton" type="button">Cancel</button>
+          <button id="confirmOkButton" class="danger" type="button">Delete</button>
+        </div>
+      </div>
+    </div>
     <script src="renderer.js"></script>
   </body>
 </html>
