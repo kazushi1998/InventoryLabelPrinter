@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
+const APP_ICON = path.join(__dirname, "..", "assets", "icon.ico");
+
 const DEFAULT_STORE = {
   settings: {
     fontFamily: "Consolas",
@@ -107,6 +109,7 @@ function createWindow() {
     minWidth: 1040,
     minHeight: 680,
     title: "Inventory Label Printer",
+    icon: APP_ICON,
     backgroundColor: "#f3f6fa",
     autoHideMenuBar: true,
     webPreferences: {
