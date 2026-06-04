@@ -19,27 +19,7 @@ The app is designed for a Citizen CLP-7201e style roll label printer, with local
 - Citizen/CLP printers are auto-preferred when printing
 - Print jobs use the configured label width and height as the printer page size, so a roll printer receives one label per page instead of an A4 sheet layout
 
-## Development
 
-Install dependencies:
-
-```powershell
-npm install
-```
-
-Run the app locally:
-
-```powershell
-npm start
-```
-
-Build a portable Windows executable:
-
-```powershell
-npm run dist
-```
-
-The generated app will be written under `dist/`.
 
 ## Data Storage
 
