@@ -36,6 +36,11 @@ const elements = {
   printButton: $("#printButton"),
   batchList: $("#batchList"),
   clearBatchesButton: $("#clearBatchesButton"),
+  confirmOverlay: $("#confirmOverlay"),
+  confirmTitle: $("#confirmTitle"),
+  confirmMessage: $("#confirmMessage"),
+  confirmCancelButton: $("#confirmCancelButton"),
+  confirmOkButton: $("#confirmOkButton"),
   toast: $("#toast")
 };
 
@@ -83,6 +88,38 @@ function showToast(message) {
   elements.toast.classList.add("visible");
   clearTimeout(showToast.timeout);
   showToast.timeout = setTimeout(() => elements.toast.classList.remove("visible"), 3200);
+}
+
+function askConfirmation({ title, message, okText = "OK" }) {
+  elements.confirmTitle.textContent = title;
+  elements.confirmMessage.textContent = message;
+  elements.confirmOkButton.textContent = okText;
+  elements.confirmOverlay.hidden = false;
+  elements.confirmCancelButton.focus();
+
+  return new Promise((resolve) => {
+    const finish = (value) => {
+      elements.confirmOverlay.hidden = true;
+      elements.confirmOkButton.removeEventListener("click", ok);
+      elements.confirmCancelButton.removeEventListener("click", cancel);
+      elements.confirmOverlay.removeEventListener("click", overlay);
+      document.removeEventListener("keydown", escape);
+      resolve(value);
+    };
+    const ok = () => finish(true);
+    const cancel = () => finish(false);
+    const overlay = (event) => {
+      if (event.target === elements.confirmOverlay) finish(false);
+    };
+    const escape = (event) => {
+      if (event.key === "Escape") finish(false);
+    };
+
+    elements.confirmOkButton.addEventListener("click", ok);
+    elements.confirmCancelButton.addEventListener("click", cancel);
+    elements.confirmOverlay.addEventListener("click", overlay);
+    document.addEventListener("keydown", escape);
+  });
 }
 
 function dateText(value) {
@@ -271,7 +308,11 @@ elements.addButton.addEventListener("click", async () => {
 elements.deleteButton.addEventListener("click", async () => {
   const format = selectedFormat();
   if (!format) return;
-  const confirmed = confirm(`Delete format ${format.prefix} - ${format.name}?\n\nExisting recent batches stay available for reprint.`);
+  const confirmed = await askConfirmation({
+    title: "Delete Format",
+    message: `Delete format ${format.prefix} - ${format.name}? Existing recent batches stay available for reprint.`,
+    okText: "Delete"
+  });
   if (!confirmed) return;
 
   const previousState = {
@@ -333,7 +374,11 @@ elements.batchList.addEventListener("click", async (event) => {
 elements.clearBatchesButton.addEventListener("click", async () => {
   try {
     if (!state.batches.length) return;
-    const confirmed = confirm("Clear all recently printed batches?\n\nThis only clears the recent batch history. It does not roll back next label numbers.");
+    const confirmed = await askConfirmation({
+      title: "Clear Recent Batches",
+      message: "Clear all recently printed batches? This only clears the recent batch history. It does not roll back next label numbers.",
+      okText: "Clear"
+    });
     if (!confirmed) return;
     const data = await window.labelPrinter.clearBatches();
     state.activeBatch = null;
