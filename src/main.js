@@ -33,6 +33,15 @@ const DEFAULT_STORE = {
 
 let mainWindow;
 
+function logError(source, error) {
+  try {
+    const message = `[${new Date().toISOString()}] ${source}: ${error?.stack || error?.message || error}\n`;
+    fs.appendFileSync(path.join(app.getPath("userData"), "error.log"), message);
+  } catch {
+    // Logging should never block the app.
+  }
+}
+
 function storePath() {
   return path.join(app.getPath("userData"), "store.json");
 }
@@ -81,6 +90,16 @@ function labelsForBatch(batch) {
   );
 }
 
+function publicState() {
+  const store = readStore();
+  return {
+    settings: store.settings,
+    formats: store.formats,
+    batches: store.batches.slice(-20).reverse(),
+    storePath: storePath()
+  };
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1220,
@@ -114,13 +133,7 @@ app.on("window-all-closed", () => {
 });
 
 ipcMain.handle("state:get", () => {
-  const store = readStore();
-  return {
-    settings: store.settings,
-    formats: store.formats,
-    batches: store.batches.slice(-20).reverse(),
-    storePath: storePath()
-  };
+  return publicState();
 });
 
 ipcMain.handle("settings:save", (_event, settings) => {
@@ -130,7 +143,7 @@ ipcMain.handle("settings:save", (_event, settings) => {
     fontSizePt: positiveInt(settings.fontSizePt, DEFAULT_STORE.settings.fontSizePt, 72)
   };
   writeStore(store);
-  return store.settings;
+  return publicState();
 });
 
 ipcMain.handle("format:save", (_event, payload) => {
@@ -149,7 +162,7 @@ ipcMain.handle("format:save", (_event, payload) => {
   format.labelHeightMm = positiveInt(payload.labelHeightMm, format.labelHeightMm, 100);
 
   writeStore(store);
-  return format;
+  return { format, state: publicState() };
 });
 
 ipcMain.handle("format:add", (_event, payload) => {
@@ -169,7 +182,7 @@ ipcMain.handle("format:add", (_event, payload) => {
 
   store.formats.push(format);
   writeStore(store);
-  return format;
+  return { format, state: publicState() };
 });
 
 ipcMain.handle("format:delete", (_event, formatId) => {
@@ -178,14 +191,14 @@ ipcMain.handle("format:delete", (_event, formatId) => {
   if (nextFormats.length === store.formats.length) throw new Error("Format not found.");
   store.formats = nextFormats;
   writeStore(store);
-  return true;
+  return publicState();
 });
 
 ipcMain.handle("batches:clear", () => {
   const store = readStore();
   store.batches = [];
   writeStore(store);
-  return true;
+  return publicState();
 });
 
 ipcMain.handle("batch:create", (_event, payload) => {
@@ -297,3 +310,6 @@ ipcMain.handle("print:labels", async (_event, batch, labels, settings) => {
     );
   });
 });
+
+process.on("uncaughtException", (error) => logError("uncaughtException", error));
+process.on("unhandledRejection", (error) => logError("unhandledRejection", error));
