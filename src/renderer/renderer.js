@@ -39,6 +39,14 @@ const elements = {
   toast: $("#toast")
 };
 
+window.addEventListener("error", (event) => {
+  showToast(event.message || "Something went wrong.");
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  showToast(event.reason?.message || "Something went wrong.");
+});
+
 function labelText(format, number = format.nextNumber) {
   return `${format.prefix}${String(number).padStart(format.digits, "0")}`;
 }
@@ -255,6 +263,7 @@ elements.addButton.addEventListener("click", async () => {
 });
 
 elements.deleteButton.addEventListener("click", async () => {
+  elements.deleteButton.disabled = true;
   try {
     const format = selectedFormat();
     if (!format) return;
@@ -262,11 +271,16 @@ elements.deleteButton.addEventListener("click", async () => {
     if (!confirmed) return;
     await window.labelPrinter.deleteFormat(format.id);
     state.selectedFormatId = null;
+    state.activeBatch = null;
+    state.activeLabels = [];
     await loadState();
+    renderPreview();
     elements.prefixInput.focus();
     showToast("Format deleted.");
   } catch (error) {
     showToast(error.message);
+  } finally {
+    elements.deleteButton.disabled = !selectedFormat();
   }
 });
 
